@@ -1,13 +1,14 @@
 {
   "ok": true,
-  "finished_at": "2026-11-15T19:58:02.874049+00:00",
+  "finished_at": "2026-11-15T20:01:20.162396+00:00",
   "mode": "live",
-  "elapsed_sec": 48.5,
+  "elapsed_sec": 46.6,
   "found": 28,
   "inserted": 0,
   "new_matches": 0,
+  "new_other": 0,
   "alerts_sent": 0,
-  "matching_filters": 9,
+  "matching_filters": 19,
   "sources": {
     "רמלה": 11,
     "רמלה-Homeless": 1,
