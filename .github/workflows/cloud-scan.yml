@@ -48,5 +48,9 @@ jobs:
             echo "No DB changes to commit"
           else
             git commit -m "chore: cloud scan update $(date -u +%Y-%m-%dT%H:%MZ)"
-            git push
+            for i in 1 2 3; do
+              git pull --rebase origin master && git push && break
+              echo "Push conflict, retry $i"
+              sleep 5
+            done
           fi
