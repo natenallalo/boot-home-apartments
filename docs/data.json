@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-15T19:14:50.689647+00:00",
+  "generated_at": "2026-11-15T19:18:42.746922+00:00",
   "cities": [
     "רמלה",
     "לוד"
@@ -27,7 +27,7 @@
       "summary": "רמלה המרכז האזרחי;משכנות ברמלה.",
       "is_realtor": false,
       "is_favorite": true,
-      "updated_at": "2026-11-15 19:09:17"
+      "updated_at": "2026-11-15 19:18:42"
     },
     {
       "id": 122,
@@ -43,7 +43,7 @@
       "summary": "לוד רסקו בלוד.",
       "is_realtor": false,
       "is_favorite": true,
-      "updated_at": "2026-11-15 19:09:17"
+      "updated_at": "2026-11-15 19:18:42"
     },
     {
       "id": 126,
@@ -59,7 +59,7 @@
       "summary": "יחידת דיור · לוד רסקו בלוד.",
       "is_realtor": false,
       "is_favorite": false,
-      "updated_at": "2026-11-15 19:09:17"
+      "updated_at": "2026-11-15 19:18:42"
     },
     {
       "id": 124,
@@ -75,7 +75,7 @@
       "summary": "יחידת דיור · לוד רסקו בלוד.",
       "is_realtor": false,
       "is_favorite": false,
-      "updated_at": "2026-11-15 19:09:17"
+      "updated_at": "2026-11-15 19:18:42"
     },
     {
       "id": 118,
@@ -91,7 +91,7 @@
       "summary": "יחידת דיור · לוד נווה זית בלוד.",
       "is_realtor": false,
       "is_favorite": false,
-      "updated_at": "2026-11-15 19:09:17"
+      "updated_at": "2026-11-15 19:18:42"
     },
     {
       "id": 22,
@@ -107,7 +107,7 @@
       "summary": "יחידת דיור · רמלה קריית מנחם בגין ברמלה.",
       "is_realtor": false,
       "is_favorite": false,
-      "updated_at": "2026-11-15 19:09:17"
+      "updated_at": "2026-11-15 19:18:42"
     },
     {
       "id": 146,
@@ -155,7 +155,7 @@
       "summary": "רמלה נווה מאיר;בן גוריון;נווה יהונתן;יפה נוף ברמלה.",
       "is_realtor": false,
       "is_favorite": false,
-      "updated_at": "2026-11-15 19:09:17"
+      "updated_at": "2026-11-15 19:18:42"
     }
   ]
 }
