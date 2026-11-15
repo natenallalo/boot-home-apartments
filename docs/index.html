@@ -14,8 +14,6 @@
       --muted: #94a3b8;
       --accent: #2dd4bf;
       --accent2: #38bdf8;
-      --ok: #4ade80;
-      --bad: #f87171;
       --input: #0f172a;
     }
     * { box-sizing: border-box; }
@@ -38,7 +36,7 @@
     header p { margin: 0; color: var(--muted); }
     .layout {
       display: grid;
-      grid-template-columns: 280px 1fr;
+      grid-template-columns: 290px 1fr;
       gap: 1.1rem;
       margin-top: 1.25rem;
       align-items: start;
@@ -54,10 +52,7 @@
       position: sticky;
       top: 0.75rem;
     }
-    .filters h2 {
-      margin: 0 0 0.85rem;
-      font-size: 1.05rem;
-    }
+    .filters h2 { margin: 0 0 0.85rem; font-size: 1.05rem; }
     .filters h3 {
       margin: 0.95rem 0 0.55rem;
       font-size: 0.92rem;
@@ -70,7 +65,7 @@
       font-size: 0.88rem;
       color: var(--muted);
     }
-    label.field span { display: block; margin-bottom: 0.28rem; color: var(--text); }
+    label.field > span { display: block; margin-bottom: 0.28rem; color: var(--text); }
     input[type="text"], input[type="number"] {
       width: 100%;
       background: var(--input);
@@ -80,20 +75,24 @@
       padding: 0.55rem 0.7rem;
       font-size: 0.95rem;
     }
-    .grid2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.55rem;
-    }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; }
     .check {
       display: flex;
       align-items: center;
-      gap: 0.45rem;
-      margin: 0.4rem 0;
+      gap: 0.5rem;
+      margin: 0.45rem 0;
       font-size: 0.92rem;
       color: var(--text);
+      cursor: pointer;
+      user-select: none;
     }
-    .check input { accent-color: var(--accent); width: 1rem; height: 1rem; }
+    .check input {
+      accent-color: var(--accent);
+      width: 1.1rem;
+      height: 1.1rem;
+      flex: 0 0 auto;
+      cursor: pointer;
+    }
     .hint { font-size: 0.8rem; color: var(--muted); margin: 0.2rem 0 0.6rem; }
     .actions { display: grid; gap: 0.45rem; margin-top: 0.85rem; }
     button {
@@ -138,11 +137,7 @@
     }
     .listing a { color: var(--accent2); text-decoration: none; }
     .listing a:hover { text-decoration: underline; }
-    .row {
-      color: var(--muted);
-      font-size: 0.93rem;
-      margin-bottom: 0.5rem;
-    }
+    .row { color: var(--muted); font-size: 0.93rem; margin-bottom: 0.5rem; }
     .summary { margin: 0.35rem 0 0.65rem; line-height: 1.5; }
     .badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
     .badge {
@@ -180,50 +175,50 @@
     </header>
 
     <div class="layout">
-      <aside class="filters" id="filters">
+      <form class="filters" id="filterForm" autocomplete="off">
         <h2>פילטרים</h2>
 
-        <label class="check"><input type="checkbox" id="focusRegion" checked /> מיקוד רמלה + לוד בלבד</label>
+        <label class="check"><input type="checkbox" name="focusRegion" checked /> מיקוד רמלה + לוד בלבד</label>
 
         <label class="field">
           <span>עיר / מילת מפתח</span>
-          <input type="text" id="cityKeyword" placeholder="רמלה לוד / דירה ברמלה..." />
+          <input type="text" name="cityKeyword" placeholder="רמלה לוד / דירה ברמלה..." />
         </label>
-        <p class="hint">אפשר לכתוב משפט חופשי. 0 = ללא הגבלה במחיר/חדרים/קומה.</p>
+        <p class="hint">0 במחיר/חדרים/קומה = ללא הגבלה. הסינון מתעדכן מיד.</p>
 
         <h3>סוג נכס</h3>
-        <label class="check"><input type="checkbox" id="includeApartments" checked /> דירות</label>
-        <label class="check"><input type="checkbox" id="includeUnits" checked /> יחידות דיור</label>
-        <label class="check"><input type="checkbox" id="groundFloorOnly" /> קומת קרקע / דירת גן בלבד</label>
+        <label class="check"><input type="checkbox" name="includeApartments" checked /> דירות</label>
+        <label class="check"><input type="checkbox" name="includeUnits" checked /> יחידות דיור</label>
+        <label class="check"><input type="checkbox" name="groundFloorOnly" /> קומת קרקע / דירת גן בלבד</label>
 
         <h3>מחיר</h3>
         <div class="grid2">
-          <label class="field"><span>מינ׳</span><input type="number" id="minPrice" min="0" step="100" value="0" /></label>
-          <label class="field"><span>מקס׳</span><input type="number" id="maxPrice" min="0" step="100" value="3500" /></label>
+          <label class="field"><span>מינ׳</span><input type="number" name="minPrice" min="0" step="100" value="0" /></label>
+          <label class="field"><span>מקס׳</span><input type="number" name="maxPrice" min="0" step="100" value="3500" /></label>
         </div>
 
         <h3>חדרים</h3>
         <div class="grid2">
-          <label class="field"><span>מינ׳ (לדירות)</span><input type="number" id="minRooms" min="0" step="0.5" value="3" /></label>
-          <label class="field"><span>מקס׳</span><input type="number" id="maxRooms" min="0" step="0.5" value="0" /></label>
+          <label class="field"><span>מינ׳ (לדירות)</span><input type="number" name="minRooms" min="0" step="0.5" value="3" /></label>
+          <label class="field"><span>מקס׳</span><input type="number" name="maxRooms" min="0" step="0.5" value="0" /></label>
         </div>
-        <p class="hint">יחידות דיור מוצגות גם עם פחות חדרים אם מסומן למעלה.</p>
+        <p class="hint">יחידות דיור מוצגות גם עם פחות חדרים.</p>
 
         <h3>קומה</h3>
         <div class="grid2">
-          <label class="field"><span>מינ׳</span><input type="number" id="minFloor" min="0" step="1" value="0" /></label>
-          <label class="field"><span>מקס׳</span><input type="number" id="maxFloor" min="0" step="1" value="0" /></label>
+          <label class="field"><span>מינ׳</span><input type="number" name="minFloor" min="0" step="1" value="0" /></label>
+          <label class="field"><span>מקס׳</span><input type="number" name="maxFloor" min="0" step="1" value="0" /></label>
         </div>
 
         <h3>נוסף</h3>
-        <label class="check"><input type="checkbox" id="privateOnly" /> ללא תיווך בלבד (פרטי)</label>
-        <label class="check"><input type="checkbox" id="favoritesOnly" /> מועדפים בלבד</label>
+        <label class="check"><input type="checkbox" name="privateOnly" /> ללא תיווך בלבד (פרטי)</label>
+        <label class="check"><input type="checkbox" name="favoritesOnly" /> מועדפים בלבד</label>
 
         <div class="actions">
-          <button class="btn-primary" type="button" id="applyBtn">החל סינון</button>
+          <button class="btn-primary" type="submit">החל סינון</button>
           <button class="btn-ghost" type="button" id="resetBtn">אפס לברירת מחדל</button>
         </div>
-      </aside>
+      </form>
 
       <main>
         <div class="meta" id="meta"></div>
@@ -231,80 +226,91 @@
       </main>
     </div>
 
-    <footer>הנתונים מתעדכנים אוטומטית כל שעה מהענן · הסינון רץ בדפדפן</footer>
+    <footer>הנתונים מתעדכנים אוטומטית כל שעה מהענן · הסינון רץ בדפדפן מיד</footer>
   </div>
 
   <script>
     const FOCUS_CITIES = ["רמלה", "לוד"];
+    const COMMERCIAL = ["חנות", "משרד", "מחסן", "גלריה", "עסק"];
     let ALL = [];
     let DEFAULTS = {};
     let GENERATED_AT = "";
 
-    const $ = (id) => document.getElementById(id);
-    const num = (id) => {
-      const v = Number($(id).value);
-      return Number.isFinite(v) ? v : 0;
-    };
+    const form = document.getElementById("filterForm");
+    const listEl = document.getElementById("list");
+    const metaEl = document.getElementById("meta");
+
     const ils = (n) => (n == null || n === "") ? "—" : Number(n).toLocaleString("he-IL") + " ₪";
     const roomsTxt = (n) => (n == null || n === "") ? "—" : n;
     const floorTxt = (n) => (n == null || n === "") ? "—" : (Number(n) === 0 ? "קרקע" : n);
-
-    function chip(label, value) {
-      return `<span class="chip">${label}: <strong>${value}</strong></span>`;
-    }
+    const chip = (label, value) => `<span class="chip">${label}: <strong>${value}</strong></span>`;
+    const toNum = (v) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
+    };
 
     function readFilters() {
+      const fd = new FormData(form);
+      const on = (name) => form.elements[name] && form.elements[name].checked;
       return {
-        focusRegion: $("focusRegion").checked,
-        cityKeyword: ($("cityKeyword").value || "").trim(),
-        includeApartments: $("includeApartments").checked,
-        includeUnits: $("includeUnits").checked,
-        groundFloorOnly: $("groundFloorOnly").checked,
-        minPrice: num("minPrice"),
-        maxPrice: num("maxPrice"),
-        minRooms: num("minRooms"),
-        maxRooms: num("maxRooms"),
-        minFloor: num("minFloor"),
-        maxFloor: num("maxFloor"),
-        privateOnly: $("privateOnly").checked,
-        favoritesOnly: $("favoritesOnly").checked,
+        focusRegion: on("focusRegion"),
+        cityKeyword: String(fd.get("cityKeyword") || "").trim(),
+        includeApartments: on("includeApartments"),
+        includeUnits: on("includeUnits"),
+        groundFloorOnly: on("groundFloorOnly"),
+        minPrice: toNum(fd.get("minPrice")),
+        maxPrice: toNum(fd.get("maxPrice")),
+        minRooms: toNum(fd.get("minRooms")),
+        maxRooms: toNum(fd.get("maxRooms")),
+        minFloor: toNum(fd.get("minFloor")),
+        maxFloor: toNum(fd.get("maxFloor")),
+        privateOnly: on("privateOnly"),
+        favoritesOnly: on("favoritesOnly"),
       };
     }
 
     function applyDefaults(d) {
       DEFAULTS = d || {};
-      $("focusRegion").checked = DEFAULTS.focus_region !== false;
-      $("cityKeyword").value = DEFAULTS.city_keyword || "רמלה לוד";
-      $("includeApartments").checked = DEFAULTS.include_apartments !== false;
-      $("includeUnits").checked = DEFAULTS.include_units !== false;
-      $("groundFloorOnly").checked = !!DEFAULTS.ground_floor_only;
-      $("minPrice").value = DEFAULTS.min_price ?? 0;
-      $("maxPrice").value = DEFAULTS.max_price ?? 3500;
-      $("minRooms").value = DEFAULTS.min_rooms ?? 3;
-      $("maxRooms").value = DEFAULTS.max_rooms ?? 0;
-      $("minFloor").value = DEFAULTS.min_floor ?? 0;
-      $("maxFloor").value = DEFAULTS.max_floor ?? 0;
-      $("privateOnly").checked = !!DEFAULTS.private_only;
-      $("favoritesOnly").checked = !!DEFAULTS.favorites_only;
+      const el = form.elements;
+      el.focusRegion.checked = DEFAULTS.focus_region !== false;
+      el.cityKeyword.value = DEFAULTS.city_keyword || "רמלה לוד";
+      el.includeApartments.checked = DEFAULTS.include_apartments !== false;
+      el.includeUnits.checked = DEFAULTS.include_units !== false;
+      el.groundFloorOnly.checked = !!DEFAULTS.ground_floor_only;
+      el.minPrice.value = DEFAULTS.min_price ?? 0;
+      el.maxPrice.value = DEFAULTS.max_price ?? 3500;
+      el.minRooms.value = DEFAULTS.min_rooms ?? 3;
+      el.maxRooms.value = DEFAULTS.max_rooms ?? 0;
+      el.minFloor.value = DEFAULTS.min_floor ?? 0;
+      el.maxFloor.value = DEFAULTS.max_floor ?? 0;
+      el.privateOnly.checked = !!DEFAULTS.private_only;
+      el.favoritesOnly.checked = !!DEFAULTS.favorites_only;
     }
 
-    function tokensFromKeyword(keyword) {
-      return (keyword || "")
-        .split(/[\s,;/|]+/)
-        .map((t) => t.trim())
-        .filter((t) => t.length >= 2);
+    function blobOf(item) {
+      return `${item.title || ""} ${item.description || ""} ${item.summary || ""} ${item.property_type || ""}`;
     }
 
     function isUnit(item) {
-      return !!item.is_unit;
+      if (item.is_unit) return true;
+      const b = blobOf(item);
+      return (item.property_type || "") === "יחידת דיור" || b.includes("יחידת דיור") || b.includes("יחידה");
     }
 
-    function isApartmentLike(item) {
-      if (isUnit(item)) return false;
-      const t = item.property_type || "";
-      if (!t || t === "דירה" || t === "דירת גן") return true;
-      const blob = `${item.title || ""} ${item.description || ""}`;
-      return blob.includes("דירה") || true;
+    function isCommercial(item) {
+      const b = blobOf(item);
+      return COMMERCIAL.some((w) => b.includes(w));
+    }
+
+    function isSaleAd(item) {
+      const b = blobOf(item);
+      return b.includes("למכירה") && !b.includes("להשכרה");
+    }
+
+    function isGround(item) {
+      if (item.floor === 0 || item.is_garden) return true;
+      const b = blobOf(item);
+      return b.includes("קרקע") || b.includes("דירת גן") || (item.property_type || "") === "דירת גן";
     }
 
     function matchesCity(item, f) {
@@ -313,67 +319,69 @@
       const inFocus = (text) => FOCUS_CITIES.some((c) => (text || "").includes(c));
 
       if (f.focusRegion) {
-        // If city is known and not Ramla/Lod — exclude (e.g. תל אביב).
+        if (cityField && !inFocus(cityField) && !inFocus(hay)) return false;
+        if (cityField && !inFocus(cityField) && inFocus(hay)) {
+          // Wrong city label but text mentions Ramla/Lod — keep
+          return true;
+        }
         if (cityField && !inFocus(cityField)) return false;
         return inFocus(cityField) || inFocus(hay);
       }
 
-      const tokens = tokensFromKeyword(f.cityKeyword);
+      const tokens = (f.cityKeyword || "").split(/[\s,;/|]+/).map((t) => t.trim()).filter((t) => t.length >= 2);
       if (!tokens.length) return true;
       return tokens.every((t) => hay.includes(t));
     }
 
-    function isSaleAd(item) {
-      const blob = `${item.title || ""} ${item.description || ""}`;
-      return blob.includes("למכירה") && !blob.includes("להשכרה");
+    function passesType(item, f) {
+      if (!f.includeApartments && !f.includeUnits) return false;
+      if (isCommercial(item)) return false;
+      const unit = isUnit(item);
+      if (unit) return f.includeUnits;
+      return f.includeApartments;
+    }
+
+    function passesPrice(item, f) {
+      // Match SQLite bot: when min/max set, price must be present.
+      if (f.minPrice > 0) {
+        if (item.price == null || item.price < f.minPrice) return false;
+      }
+      if (f.maxPrice > 0) {
+        if (item.price == null || item.price > f.maxPrice) return false;
+      }
+      return true;
+    }
+
+    function passesRooms(item, f) {
+      const unit = isUnit(item);
+      if (f.maxRooms > 0) {
+        if (item.rooms != null && item.rooms > f.maxRooms) return false;
+      }
+      if (f.minRooms > 0) {
+        if (unit && f.includeUnits) return true; // flexible for units
+        if (item.rooms == null || item.rooms < f.minRooms) return false;
+      }
+      return true;
+    }
+
+    function passesFloor(item, f) {
+      if (f.groundFloorOnly && !isGround(item)) return false;
+      if (item.floor == null) return true; // unknown floor allowed like the bot
+      if (f.minFloor > 0 && item.floor < f.minFloor) return false;
+      if (f.maxFloor > 0 && item.floor > f.maxFloor) return false;
+      return true;
     }
 
     function filterListings(f) {
-      if (!f.includeApartments && !f.includeUnits) return [];
-
       return ALL.filter((item) => {
         if (isSaleAd(item)) return false;
         if (f.favoritesOnly && !item.is_favorite) return false;
         if (f.privateOnly && item.is_realtor) return false;
         if (!matchesCity(item, f)) return false;
-
-        const unit = isUnit(item);
-        const apt = isApartmentLike(item);
-        if (unit && !f.includeUnits) return false;
-        if (!unit && apt && !f.includeApartments) return false;
-        if (!unit && !apt && !f.includeApartments) return false;
-
-        if (f.groundFloorOnly) {
-          const ground =
-            item.floor === 0 ||
-            item.is_garden ||
-            (item.title || "").includes("קרקע") ||
-            (item.description || "").includes("קרקע") ||
-            (item.title || "").includes("דירת גן") ||
-            (item.description || "").includes("דירת גן");
-          if (!ground) return false;
-        }
-
-        if (f.minPrice > 0 && item.price != null && item.price < f.minPrice) return false;
-        if (f.maxPrice > 0 && item.price != null && item.price > f.maxPrice) return false;
-
-        // Rooms: apartments must meet min; units are flexible when includeUnits.
-        if (item.rooms != null) {
-          if (f.maxRooms > 0 && item.rooms > f.maxRooms) return false;
-          if (f.minRooms > 0) {
-            if (unit && f.includeUnits) {
-              // flexible for units
-            } else if (item.rooms < f.minRooms) {
-              return false;
-            }
-          }
-        }
-
-        if (item.floor != null) {
-          if (f.minFloor > 0 && item.floor < f.minFloor) return false;
-          if (f.maxFloor > 0 && item.floor > f.maxFloor) return false;
-        }
-
+        if (!passesType(item, f)) return false;
+        if (!passesPrice(item, f)) return false;
+        if (!passesRooms(item, f)) return false;
+        if (!passesFloor(item, f)) return false;
         return true;
       });
     }
@@ -382,23 +390,34 @@
       const loc = [item.city, item.neighborhood].filter(Boolean).join(" · ");
       const badges = [
         item.is_favorite ? `<span class="badge b-fav">★ מועדף</span>` : "",
-        item.source ? `<span class="badge b-source">${item.source}</span>` : "",
-        item.property_type ? `<span class="badge b-type">${item.property_type}</span>` : "",
+        item.source ? `<span class="badge b-source">${escapeHtml(item.source)}</span>` : "",
+        item.property_type ? `<span class="badge b-type">${escapeHtml(item.property_type)}</span>` : "",
         item.is_realtor
           ? `<span class="badge b-realtor">תיווך</span>`
           : `<span class="badge b-private">פרטי</span>`,
       ].join("");
       const href = item.url
-        ? `<a href="${item.url}" target="_blank" rel="noopener">למודעה המקורית ←</a>`
+        ? `<a href="${escapeAttr(item.url)}" target="_blank" rel="noopener">למודעה המקורית ←</a>`
         : "";
       return `
         <article class="listing">
           <div class="badges">${badges}</div>
-          <h2>${item.title || "ללא כותרת"}</h2>
-          <div class="row">${loc || "מיקום לא צוין"} · ${ils(item.price)} · ${roomsTxt(item.rooms)} חדרים · קומה ${floorTxt(item.floor)}</div>
-          ${item.summary ? `<p class="summary">${item.summary}</p>` : ""}
+          <h2>${escapeHtml(item.title || "ללא כותרת")}</h2>
+          <div class="row">${escapeHtml(loc || "מיקום לא צוין")} · ${ils(item.price)} · ${roomsTxt(item.rooms)} חדרים · קומה ${floorTxt(item.floor)}</div>
+          ${item.summary ? `<p class="summary">${escapeHtml(item.summary)}</p>` : ""}
           ${href}
         </article>`;
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+    function escapeAttr(s) {
+      return escapeHtml(s).replace(/'/g, "&#39;");
     }
 
     function render() {
@@ -407,49 +426,38 @@
       const when = GENERATED_AT
         ? new Date(GENERATED_AT).toLocaleString("he-IL")
         : "לא ידוע";
-      $("meta").innerHTML = [
+      metaEl.innerHTML = [
         chip("מוצגות", items.length),
         chip("במסד", ALL.length),
         chip("עודכן", when),
       ].join("");
-      $("list").innerHTML = items.length
+      listEl.innerHTML = items.length
         ? items.map(card).join("")
-        : `<div class="empty">אין מודעות לפי הסינון הנוכחי. נסו להרחיב מחיר/חדרים או לכבות מיקוד.</div>`;
+        : `<div class="empty">אין מודעות לפי הסינון. נסו להעלות מחיר מקס׳, להוריד חדרים מינ׳, או לכבות מיקוד.</div>`;
     }
 
     async function load() {
       try {
-        const res = await fetch(`data.json?t=${Date.now()}`);
+        const res = await fetch(`data.json?t=${Date.now()}`, { cache: "no-store" });
         if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
-        ALL = data.listings || [];
+        ALL = Array.isArray(data.listings) ? data.listings : [];
         GENERATED_AT = data.generated_at || "";
         applyDefaults(data.defaults || {});
         render();
       } catch (err) {
-        $("list").innerHTML = `<div class="error">לא הצלחתי לטעון נתונים (${err.message}).</div>`;
+        listEl.innerHTML = `<div class="error">לא הצלחתי לטעון נתונים (${escapeHtml(err.message)}).</div>`;
       }
     }
 
-    $("applyBtn").addEventListener("click", render);
-    $("resetBtn").addEventListener("click", () => {
-      applyDefaults(DEFAULTS);
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
       render();
     });
-    [
-      "focusRegion", "cityKeyword", "includeApartments", "includeUnits", "groundFloorOnly",
-      "minPrice", "maxPrice", "minRooms", "maxRooms", "minFloor", "maxFloor",
-      "privateOnly", "favoritesOnly"
-    ].forEach((id) => {
-      $(id).addEventListener("change", render);
-      $(id).addEventListener("input", () => {
-        if (id === "cityKeyword") render();
-      });
-    });
-    $("focusRegion").addEventListener("change", () => {
-      if ($("focusRegion").checked && !$("cityKeyword").value.trim()) {
-        $("cityKeyword").value = "רמלה לוד";
-      }
+    form.addEventListener("input", render);
+    form.addEventListener("change", render);
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      applyDefaults(DEFAULTS);
       render();
     });
 
