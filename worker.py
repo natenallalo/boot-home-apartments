@@ -19,6 +19,8 @@ from dotenv import load_dotenv
 import ai_filter
 import database as db
 from export_public import export_public_data
+from match_filter import filter_matches
+from notify import notify_new_matches, send_telegram_message, telegram_configured
 from scraper import FOCUS_REGION_CITIES, fetch_listings
 from settings_store import load_settings, save_settings
 
@@ -57,12 +59,12 @@ def run_once() -> dict:
         use_social=use_social,
         use_yad2=bool(settings.get("use_yad2", False)),
         focus_region=focus_region,
-        max_items=60,
+        max_items=100,
     )
 
     use_openai = bool((os.getenv("OPENAI_API_KEY") or "").strip().strip('"').strip("'"))
     enriched = ai_filter.enrich_listings(listings, use_openai=use_openai)
-    inserted = db.upsert_many(enriched)
+    inserted, new_rows = db.upsert_many(enriched)
 
     # Apply default search filters and count matches for status.
     min_rooms = settings.get("min_rooms") or 0
@@ -80,6 +82,15 @@ def run_once() -> dict:
         private_only=bool(settings.get("private_only", False)),
     )
 
+    new_matches = filter_matches(new_rows, settings)
+    notify_result: dict = {"sent": 0}
+    if new_matches:
+        _log(f"New filter matches: {len(new_matches)} — sending Telegram alerts")
+        notify_result = notify_new_matches(new_matches, settings=settings)
+        _log(f"Telegram notify: {notify_result}")
+    elif inserted and telegram_configured(settings) and settings.get("notify_enabled", True):
+        _log(f"Inserted {inserted} listings but none matched saved filters")
+
     elapsed = round(time.time() - started, 1)
     status = {
         "ok": True,
@@ -88,6 +99,8 @@ def run_once() -> dict:
         "elapsed_sec": elapsed,
         "found": len(enriched),
         "inserted": inserted,
+        "new_matches": len(new_matches),
+        "alerts_sent": notify_result.get("sent", 0),
         "matching_filters": len(matches),
         "sources": (meta or {}).get("sources", {}),
         "notes": (meta or {}).get("notes", []),
@@ -103,6 +116,7 @@ def run_once() -> dict:
         _log(f"Public export failed: {type(exc).__name__}: {exc}")
     _log(
         f"Done mode={mode} found={len(enriched)} inserted={inserted} "
+        f"new_matches={len(new_matches)} alerts={notify_result.get('sent', 0)} "
         f"matches={len(matches)} elapsed={elapsed}s sources={status['sources']}"
     )
     return status
@@ -112,7 +126,7 @@ def run_loop() -> None:
     """Continuous loop for always-on cloud workers."""
     while True:
         settings = load_settings()
-        interval = max(5, int(settings.get("interval_minutes") or 60))
+        interval = max(5, int(settings.get("interval_minutes") or 30))
         try:
             run_once()
         except Exception as exc:
@@ -130,6 +144,14 @@ def main(argv: list[str] | None = None) -> int:
         save_settings({})
         _log(f"Wrote defaults to {Path('settings.json').resolve()}")
         return 0
+    if "--test-telegram" in args:
+        settings = load_settings()
+        ok, detail = send_telegram_message(
+            "✅ בדיקת התראות מאתר הדירות — אם קיבלת את זה, ההתראות עובדות.",
+            settings=settings,
+        )
+        _log(f"Telegram test: ok={ok} detail={detail}")
+        return 0 if ok else 1
     status = run_once()
     return 0 if status.get("ok") else 1
 

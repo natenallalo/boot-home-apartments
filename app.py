@@ -14,6 +14,8 @@ import ai_filter
 import database as db
 from scraper import FOCUS_REGION_CITIES, fetch_listings
 from search_utils import extract_city, extract_cities, parse_search_query
+from match_filter import filter_matches
+from notify import notify_new_matches, send_telegram_message, telegram_configured
 from settings_store import load_settings, save_settings
 
 ENV_PATH = Path(__file__).resolve().parent / ".env"
@@ -113,10 +115,29 @@ def _clean_env_value(value: str) -> str:
     return (value or "").strip().strip('"').strip("'")
 
 
-def save_keys_to_env(openai_key: str, apify_token: str) -> None:
+def save_keys_to_env(
+    openai_key: str,
+    apify_token: str,
+    telegram_bot_token: str = "",
+    telegram_chat_id: str = "",
+) -> None:
     ENV_PATH.touch(exist_ok=True)
     set_key(str(ENV_PATH), "OPENAI_API_KEY", _clean_env_value(openai_key))
     set_key(str(ENV_PATH), "APIFY_API_TOKEN", _clean_env_value(apify_token))
+    if telegram_bot_token is not None:
+        set_key(
+            str(ENV_PATH),
+            "TELEGRAM_BOT_TOKEN",
+            _clean_env_value(telegram_bot_token),
+        )
+        os.environ["TELEGRAM_BOT_TOKEN"] = _clean_env_value(telegram_bot_token)
+    if telegram_chat_id is not None:
+        set_key(
+            str(ENV_PATH),
+            "TELEGRAM_CHAT_ID",
+            _clean_env_value(telegram_chat_id),
+        )
+        os.environ["TELEGRAM_CHAT_ID"] = _clean_env_value(telegram_chat_id)
     os.environ["OPENAI_API_KEY"] = _clean_env_value(openai_key)
     os.environ["APIFY_API_TOKEN"] = _clean_env_value(apify_token)
     load_dotenv(ENV_PATH, override=True)
@@ -250,14 +271,21 @@ def run_scan(
         use_social=use_social,
         use_yad2=use_yad2,
         focus_region=focus_region,
-        max_items=60,
+        max_items=100,
     )
     use_openai = bool(_clean_env_value(os.getenv("OPENAI_API_KEY", "")))
     enriched = ai_filter.enrich_listings(listings, use_openai=use_openai)
-    inserted = db.upsert_many(enriched)
+    inserted, new_rows = db.upsert_many(enriched)
+    settings_now = load_settings()
+    new_matches = filter_matches(new_rows, settings_now)
+    alerts = {"sent": 0}
+    if new_matches:
+        alerts = notify_new_matches(new_matches, settings=settings_now)
     meta = dict(meta or {})
     meta["trigger"] = trigger
     meta["scan_cities"] = target_cities
+    meta["new_matches"] = len(new_matches)
+    meta["alerts_sent"] = alerts.get("sent", 0)
     st.session_state["last_fetch_mode"] = mode
     st.session_state["last_inserted"] = inserted
     st.session_state["last_fetch_meta"] = meta
@@ -417,7 +445,11 @@ with st.sidebar:
     st.divider()
     st.subheader("☁️ סריקה בענן (גם כשהמחשב כבוי)")
     st.caption(
-        "שמירת ההגדרות כאן מעדכנת את settings.json שהענן (GitHub Actions) קורא ממנו כל שעה."
+        "שמירת ההגדרות כאן מעדכנת את settings.json שהענן קורא ממנו כל ~30 דקות."
+    )
+    notify_enabled = st.toggle(
+        "שלח התראת Telegram על דירה חדשה לפי הסינון",
+        value=bool(SAVED.get("notify_enabled", True)),
     )
     if st.button("💾 שמור הגדרות לענן", use_container_width=True, type="primary"):
         save_settings(
@@ -441,9 +473,14 @@ with st.sidebar:
                 "private_only": private_only,
                 "interval_minutes": int(auto_interval_min),
                 "enabled": True,
+                "notify_enabled": notify_enabled,
+                "telegram_chat_id": _clean_env_value(
+                    os.getenv("TELEGRAM_CHAT_ID", "")
+                )
+                or str(SAVED.get("telegram_chat_id") or ""),
             }
         )
-        st.success("ההגדרות נשמרו — הענן יסרוק לפי זה גם כשהמחשב כבוי")
+        st.success("ההגדרות נשמרו — הענן יסרוק וישלח התראות גם כשהמחשב כבוי")
         st.rerun()
 
     if STATUS_PATH.exists():
@@ -456,21 +493,30 @@ with st.sidebar:
                 f"סריקת ענן אחרונה: {finished}\n\n"
                 f"נמצאו {cloud_status.get('found', 0)} · "
                 f"חדשים {cloud_status.get('inserted', 0)} · "
-                f"תואמים פילטר {cloud_status.get('matching_filters', 0)}"
+                f"התאמות חדשות {cloud_status.get('new_matches', 0)} · "
+                f"התראות {cloud_status.get('alerts_sent', 0)}"
             )
         except Exception:
             pass
 
     st.divider()
     with st.expander(
-        "⚙️ הגדרות מפתחות API",
-        expanded=not bool(_clean_env_value(os.getenv("APIFY_API_TOKEN", ""))),
+        "⚙️ הגדרות מפתחות API + Telegram",
+        expanded=not telegram_configured(SAVED),
     ):
         st.caption(
-            "סריקת אינטרנט עובדת בלי מפתחות. לפייסבוק ו-Yad2 נדרש APIFY_API_TOKEN."
+            "סריקת אינטרנט עובדת בלי מפתחות. לפייסבוק נדרש APIFY. "
+            "להתראות בטלגרם: צרו בוט ב-@BotFather, העתיקו את הטוקן, "
+            "שלחו הודעה לבוט, והדביקו כאן גם את ה-Chat ID (מ-@userinfobot)."
         )
         current_openai = _clean_env_value(os.getenv("OPENAI_API_KEY", ""))
         current_apify = _clean_env_value(os.getenv("APIFY_API_TOKEN", ""))
+        current_tg_token = _clean_env_value(
+            os.getenv("TELEGRAM_BOT_TOKEN", "")
+        ) or str(SAVED.get("telegram_bot_token") or "")
+        current_tg_chat = _clean_env_value(
+            os.getenv("TELEGRAM_CHAT_ID", "")
+        ) or str(SAVED.get("telegram_chat_id") or "")
 
         openai_input = st.text_input(
             "OPENAI_API_KEY",
@@ -484,16 +530,66 @@ with st.sidebar:
             type="password",
             placeholder="apify_api_...",
         )
-        if st.button("שמור מפתחות", use_container_width=True):
-            save_keys_to_env(openai_input, apify_input)
-            st.success("המפתחות נשמרו בהצלחה ל-.env")
-            st.rerun()
+        tg_token_input = st.text_input(
+            "TELEGRAM_BOT_TOKEN",
+            value=current_tg_token,
+            type="password",
+            placeholder="123456:ABC...",
+        )
+        tg_chat_input = st.text_input(
+            "TELEGRAM_CHAT_ID",
+            value=current_tg_chat,
+            placeholder="לדוגמה 712345678",
+        )
+        c_save, c_test = st.columns(2)
+        with c_save:
+            if st.button("שמור מפתחות", use_container_width=True):
+                save_keys_to_env(
+                    openai_input,
+                    apify_input,
+                    tg_token_input,
+                    tg_chat_input,
+                )
+                save_settings(
+                    {
+                        "telegram_chat_id": _clean_env_value(tg_chat_input),
+                        "notify_enabled": True,
+                    }
+                )
+                st.success("המפתחות נשמרו ל-.env ולענן")
+                st.rerun()
+        with c_test:
+            if st.button("בדיקת Telegram", use_container_width=True):
+                save_keys_to_env(
+                    openai_input,
+                    apify_input,
+                    tg_token_input,
+                    tg_chat_input,
+                )
+                ok, detail = send_telegram_message(
+                    "✅ בדיקת התראות מאתר הדירות — אם קיבלת את זה, זה עובד.",
+                    token=tg_token_input,
+                    chat_id=tg_chat_input,
+                )
+                if ok:
+                    st.success("הודעת בדיקה נשלחה לטלגרם")
+                else:
+                    st.error(f"שליחה נכשלה: {detail}")
 
         st.caption(
             "סטטוס: "
-            + ("OpenAI מוגדר ✓" if current_openai else "OpenAI חסר (fallback מילות מפתח)")
-            + " · "
-            + ("Apify מוגדר ✓" if current_apify else "Apify חסר (בלי פייסבוק/Yad2)")
+            + ("OpenAI ✓ · " if current_openai else "OpenAI חסר · ")
+            + ("Apify ✓ · " if current_apify else "Apify חסר · ")
+            + (
+                "Telegram ✓"
+                if telegram_configured(
+                    {
+                        "telegram_bot_token": current_tg_token,
+                        "telegram_chat_id": current_tg_chat,
+                    }
+                )
+                else "Telegram לא מוגדר"
+            )
         )
 
     st.divider()

@@ -902,54 +902,129 @@ def _normalize_apify_item(item: dict[str, Any], source: str) -> dict[str, Any]:
     }
 
 
-def _facebook_marketplace_urls(cities: list[str]) -> list[dict[str, str]]:
-    """Build Marketplace search URLs for Ramla/Lod (via Tel Aviv marketplace hub)."""
+def _facebook_query_variants(cities: list[str]) -> list[str]:
+    """Broad Hebrew/English query set so we miss fewer Marketplace ads."""
+    english = {"רמלה": ["Ramla", "Ramle"], "לוד": ["Lod", "Lydda"]}
     queries: list[str] = []
     for city in cities:
         queries.extend(
             [
                 f"דירה להשכרה {city}",
+                f"דירה {city} להשכרה",
                 f"יחידת דיור {city}",
+                f"יחידה להשכרה {city}",
                 f"דירת גן {city}",
                 f"קומת קרקע {city}",
-                f"apartment for rent {city}",
+                f"דירת 3 חדרים {city}",
+                f"3 חדרים להשכרה {city}",
+                f"להשכרה {city}",
+                f"דירה עד 3500 {city}",
+                f"השכרה פרטי {city}",
             ]
         )
-    urls: list[dict[str, str]] = []
+        for en in english.get(city, []):
+            queries.extend(
+                [
+                    f"apartment for rent {en}",
+                    f"rent {en}",
+                    f"apartment {en}",
+                    f"studio {en}",
+                ]
+            )
+    # Preserve order, drop duplicates.
+    seen: set[str] = set()
+    unique: list[str] = []
     for q in queries:
+        if q not in seen:
+            seen.add(q)
+            unique.append(q)
+    return unique
+
+
+def _facebook_marketplace_urls(cities: list[str]) -> list[dict[str, str]]:
+    """Build many Marketplace search URLs across nearby hubs."""
+    hubs = [
+        "telaviv",
+        "jerusalem",
+        "rishonlezion",
+        "rehovot",
+        "modiin",
+    ]
+    urls: list[dict[str, str]] = []
+    for q in _facebook_query_variants(cities):
         encoded = quote(q)
-        urls.append(
-            {
-                "url": f"https://www.facebook.com/marketplace/telaviv/search/?query={encoded}"
-            }
-        )
-        urls.append(
-            {
-                "url": (
-                    "https://www.facebook.com/marketplace/telaviv/propertyrentals"
-                    f"?query={encoded}"
-                )
-            }
-        )
+        for hub in hubs:
+            urls.append(
+                {"url": f"https://www.facebook.com/marketplace/{hub}/search/?query={encoded}"}
+            )
+            urls.append(
+                {
+                    "url": (
+                        f"https://www.facebook.com/marketplace/{hub}/propertyrentals"
+                        f"?query={encoded}"
+                    )
+                }
+            )
     return urls
+
+
+def _run_facebook_marketplace_batch(
+    client: Any,
+    start_urls: list[dict[str, str]],
+    *,
+    results_limit: int,
+    wait_secs: int = 300,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Run one Apify Marketplace actor batch and return raw items + notes."""
+    from datetime import timedelta
+
+    notes: list[str] = []
+    run_input = {
+        "startUrls": start_urls,
+        "resultsLimit": results_limit,
+        "includeListingDetails": True,
+        "searchCount": results_limit,
+    }
+    try:
+        run = client.actor("apify/facebook-marketplace-scraper").call(
+            run_input=run_input,
+            wait_duration=timedelta(seconds=wait_secs),
+            run_timeout=timedelta(seconds=wait_secs),
+            memory_mbytes=2048,
+        )
+    except Exception as exc:
+        err_name = type(exc).__name__
+        notes.append(f"שגיאת Apify Marketplace: {err_name}")
+        if "Forbidden" in err_name or "Rate" in err_name:
+            notes.append("Apify חסם זמנית (מכסה/קצב). נסה שוב בעוד כמה דקות.")
+        return [], notes
+
+    dataset_id = _extract_run_dataset_id(run)
+    if not dataset_id:
+        notes.append("Apify Marketplace רץ אך לא החזיר dataset")
+        return [], notes
+
+    items: list[dict[str, Any]] = []
+    for item in client.dataset(dataset_id).iterate_items(limit=max(results_limit * 3, 100)):
+        if isinstance(item, dict):
+            items.append(item)
+    return items, notes
 
 
 def scrape_facebook_marketplace(
     *,
     cities: Optional[list[str]] = None,
-    max_items: int = 40,
+    max_items: int = 120,
     focus_region: bool = True,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """Scrape Facebook Marketplace via Apify for the focus cities."""
-    meta: dict[str, Any] = {"notes": [], "count": 0}
+    """Scrape Facebook Marketplace via Apify for the focus cities (deep scan)."""
+    meta: dict[str, Any] = {"notes": [], "count": 0, "batches": 0}
     token = get_apify_token()
     if not _token_present(token):
         meta["notes"].append("חסר APIFY_API_TOKEN לסריקת פייסבוק")
         return [], meta
 
     try:
-        from datetime import timedelta
-
         from apify_client import ApifyClient
     except ImportError:
         meta["notes"].append("חסרה חבילת apify-client")
@@ -957,49 +1032,52 @@ def scrape_facebook_marketplace(
 
     target_cities = cities or list(FOCUS_REGION_CITIES)
     client = ApifyClient(token)
-    run_input = {
-        "startUrls": _facebook_marketplace_urls(target_cities)[:8],
-        "resultsLimit": max_items,
-        "includeListingDetails": True,
-    }
+    all_urls = _facebook_marketplace_urls(target_cities)
+    # Prefer high-signal hubs first (telaviv/propertyrentals + search).
+    preferred = [u for u in all_urls if "/telaviv/" in u.get("url", "")]
+    ordered = preferred + [u for u in all_urls if u not in preferred]
+    # 3 batches × 8 URLs balances coverage vs Apify rate limits.
+    batch_size = 8
+    max_urls = 24
+    batches = [
+        ordered[i : i + batch_size]
+        for i in range(0, min(len(ordered), max_urls), batch_size)
+    ]
+    if not batches:
+        batches = [ordered[:8]]
 
-    try:
-        run = client.actor("apify/facebook-marketplace-scraper").call(
-            run_input=run_input,
-            wait_duration=timedelta(seconds=240),
-            run_timeout=timedelta(seconds=240),
-            memory_mbytes=1024,
+    raw_items: list[dict[str, Any]] = []
+    for batch in batches:
+        items, notes = _run_facebook_marketplace_batch(
+            client,
+            batch,
+            results_limit=max(max_items, 100),
+            wait_secs=280,
         )
-    except Exception as exc:
-        err_name = type(exc).__name__
-        meta["notes"].append(f"שגיאת Apify Marketplace: {err_name}")
-        if "Forbidden" in err_name or "Rate" in err_name:
-            meta["notes"].append(
-                "Apify חסם זמנית (מכסה/קצב). נסה שוב בעוד כמה דקות."
-            )
-        return [], meta
-
-    dataset_id = _extract_run_dataset_id(run)
-    if not dataset_id:
-        meta["notes"].append("Apify Marketplace רץ אך לא החזיר dataset")
-        return [], meta
+        meta["batches"] += 1
+        meta["notes"].extend(notes)
+        raw_items.extend(items)
+        if any("Forbidden" in n or "Rate" in n for n in notes):
+            # Stop early on rate-limit to preserve quota; keep what we have.
+            break
 
     results: list[dict[str, Any]] = []
     seen: set[str] = set()
-    for item in client.dataset(dataset_id).iterate_items(limit=max_items * 2):
-        if not isinstance(item, dict):
-            continue
+    for item in raw_items:
         normalized = _normalize_apify_item(item, "Facebook Marketplace")
         if not normalized:
             continue
         if focus_region:
-            blob = f"{normalized.get('city') or ''} {normalized.get('title') or ''} {normalized.get('description') or ''}"
+            blob = (
+                f"{normalized.get('city') or ''} "
+                f"{normalized.get('title') or ''} "
+                f"{normalized.get('description') or ''} "
+                f"{normalized.get('neighborhood') or ''}"
+            )
             if not any(_city_matches(blob, c) for c in target_cities):
-                city = normalized.get("city") or ""
-                if city not in target_cities and not any(c in city for c in target_cities):
-                    continue
+                continue
         key = normalized.get("url") or normalized.get("external_id")
-        if key in seen:
+        if not key or key in seen:
             continue
         seen.add(key)
         results.append(normalized)
@@ -1007,6 +1085,9 @@ def scrape_facebook_marketplace(
             break
 
     meta["count"] = len(results)
+    meta["notes"].append(
+        f"פייסבוק: {meta['batches']} סבבים · {len(raw_items)} גולמי · {len(results)} באזור"
+    )
     if not results:
         meta["notes"].append("Marketplace לא החזיר מודעות באזור רמלה/לוד")
     return results, meta
@@ -1147,7 +1228,7 @@ def fetch_listings(
             )
             fb_items, fb_meta = scrape_facebook_marketplace(
                 cities=target,
-                max_items=max(max_items, 30),
+                max_items=max(max_items, 120),
                 focus_region=focus_region,
             )
             meta["sources"]["Facebook Marketplace"] = len(fb_items)

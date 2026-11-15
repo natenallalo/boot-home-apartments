@@ -71,15 +71,15 @@ def init_db() -> None:
         )
 
 
-def upsert_apartment(listing: dict[str, Any]) -> bool:
+def upsert_apartment(listing: dict[str, Any]) -> tuple[bool, Optional[int]]:
     """
     Insert a listing, or refresh an existing one with richer fields.
-    Returns True if a new row was inserted, False if an existing row was updated/skipped.
+    Returns (is_new_insert, apartment_id).
     """
     url = (listing.get("url") or "").strip()
     external_id = (listing.get("external_id") or "").strip() or None
     if not url and not external_id:
-        return False
+        return False, None
 
     with db_session() as conn:
         existing = None
@@ -149,9 +149,9 @@ def upsert_apartment(listing: dict[str, Any]) -> bool:
                     existing["id"],
                 ),
             )
-            return False
+            return False, int(existing["id"])
 
-        conn.execute(
+        cur = conn.execute(
             """
             INSERT INTO apartments (
                 external_id, url, title, description, city, neighborhood,
@@ -161,15 +161,19 @@ def upsert_apartment(listing: dict[str, Any]) -> bool:
             """,
             values,
         )
-        return True
+        return True, int(cur.lastrowid)
 
 
-def upsert_many(listings: list[dict[str, Any]]) -> int:
-    inserted = 0
+def upsert_many(listings: list[dict[str, Any]]) -> tuple[int, list[dict[str, Any]]]:
+    """Insert/update listings. Returns (inserted_count, newly_inserted_rows)."""
+    inserted_rows: list[dict[str, Any]] = []
     for listing in listings:
-        if upsert_apartment(listing):
-            inserted += 1
-    return inserted
+        is_new, row_id = upsert_apartment(listing)
+        if is_new and row_id is not None:
+            row = dict(listing)
+            row["id"] = row_id
+            inserted_rows.append(row)
+    return len(inserted_rows), inserted_rows
 
 
 def set_favorite(apartment_id: int, is_favorite: bool) -> None:

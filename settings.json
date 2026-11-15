@@ -1,6 +1,9 @@
 {
   "focus_region": true,
-  "cities": ["רמלה", "לוד"],
+  "cities": [
+    "רמלה",
+    "לוד"
+  ],
   "city_keyword": "רמלה לוד",
   "use_web": true,
   "use_social": true,
@@ -16,6 +19,9 @@
   "min_floor": 0,
   "max_floor": 0,
   "private_only": false,
-  "interval_minutes": 60,
-  "enabled": true
+  "interval_minutes": 30,
+  "enabled": true,
+  "notify_enabled": true,
+  "telegram_chat_id": "",
+  "telegram_bot_token": ""
 }

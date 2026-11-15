@@ -2,14 +2,16 @@ name: Cloud Apartment Scan
 
 on:
   schedule:
-    # Every hour — continues while your PC is off
-    - cron: "0 * * * *"
+    # Every 30 minutes — denser Facebook coverage + faster alerts
+    - cron: "*/30 * * * *"
   workflow_dispatch:
   push:
     paths:
       - "settings.json"
       - "worker.py"
       - "scraper.py"
+      - "notify.py"
+      - "match_filter.py"
       - "settings_store.py"
       - ".github/workflows/cloud-scan.yml"
 
@@ -19,7 +21,7 @@ permissions:
 jobs:
   scan:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,6 +39,8 @@ jobs:
         env:
           APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python worker.py
 
       - name: Commit updated database

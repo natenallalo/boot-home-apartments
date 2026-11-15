@@ -26,8 +26,10 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "min_floor": 0,
     "max_floor": 0,
     "private_only": False,
-    "interval_minutes": 60,
+    "interval_minutes": 30,
     "enabled": True,
+    "notify_enabled": True,
+    "telegram_chat_id": "",
 }
 
 
