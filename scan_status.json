@@ -1,0 +1,30 @@
+{
+  "ok": true,
+  "finished_at": "2026-11-15T19:09:17.869090+00:00",
+  "mode": "live",
+  "elapsed_sec": 38.2,
+  "found": 28,
+  "inserted": 0,
+  "matching_filters": 9,
+  "sources": {
+    "רמלה": 11,
+    "רמלה-Homeless": 1,
+    "רמלה-Ad": 10,
+    "לוד": 17,
+    "לוד-Homeless": 3,
+    "לוד-Ad": 14,
+    "enriched_details": 28,
+    "Facebook Marketplace": 0
+  },
+  "notes": [
+    "מיקוד אזור: רמלה + לוד",
+    "שגיאת Apify Marketplace: ForbiddenError",
+    "Apify חסם זמנית (מכסה/קצב). נסה שוב בעוד כמה דקות.",
+    "פייסבוק Marketplace לא החזיר מודעות באזור — נסו סריקה ידנית שוב"
+  ],
+  "cities": [
+    "רמלה",
+    "לוד"
+  ],
+  "db_total": 149
+}
