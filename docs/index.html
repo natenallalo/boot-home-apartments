@@ -14,9 +14,9 @@
       --muted: #94a3b8;
       --accent: #2dd4bf;
       --accent2: #38bdf8;
-      --warn: #fbbf24;
       --ok: #4ade80;
       --bad: #f87171;
+      --input: #0f172a;
     }
     * { box-sizing: border-box; }
     body {
@@ -29,23 +29,97 @@
         linear-gradient(180deg, var(--bg0), var(--bg1));
       min-height: 100vh;
     }
-    .wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
     header h1 {
       margin: 0 0 0.35rem;
-      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-size: clamp(1.55rem, 4vw, 2.1rem);
       letter-spacing: -0.02em;
     }
     header p { margin: 0; color: var(--muted); }
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 1.1rem;
+      margin-top: 1.25rem;
+      align-items: start;
+    }
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+    .filters {
+      background: color-mix(in srgb, var(--card) 94%, black);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 1rem;
+      position: sticky;
+      top: 0.75rem;
+    }
+    .filters h2 {
+      margin: 0 0 0.85rem;
+      font-size: 1.05rem;
+    }
+    .filters h3 {
+      margin: 0.95rem 0 0.55rem;
+      font-size: 0.92rem;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    label.field {
+      display: block;
+      margin-bottom: 0.65rem;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+    label.field span { display: block; margin-bottom: 0.28rem; color: var(--text); }
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      background: var(--input);
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 0.55rem 0.7rem;
+      font-size: 0.95rem;
+    }
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.55rem;
+    }
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      margin: 0.4rem 0;
+      font-size: 0.92rem;
+      color: var(--text);
+    }
+    .check input { accent-color: var(--accent); width: 1rem; height: 1rem; }
+    .hint { font-size: 0.8rem; color: var(--muted); margin: 0.2rem 0 0.6rem; }
+    .actions { display: grid; gap: 0.45rem; margin-top: 0.85rem; }
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 0.65rem 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .btn-primary { background: var(--accent); color: #042f2e; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
     .meta {
-      display: flex; flex-wrap: wrap; gap: 0.6rem;
-      margin: 1.25rem 0 1.5rem;
+      display: flex; flex-wrap: wrap; gap: 0.55rem;
+      margin-bottom: 0.9rem;
     }
     .chip {
       background: rgba(255,255,255,0.06);
       border: 1px solid var(--line);
       border-radius: 999px;
-      padding: 0.35rem 0.75rem;
-      font-size: 0.9rem;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.85rem;
       color: var(--muted);
     }
     .chip strong { color: var(--accent); font-weight: 700; }
@@ -54,43 +128,44 @@
       border: 1px solid var(--line);
       border-radius: 16px;
       padding: 1rem 1.1rem;
-      margin-bottom: 0.9rem;
+      margin-bottom: 0.85rem;
       box-shadow: 0 10px 30px rgba(0,0,0,0.18);
     }
     .listing h2 {
       margin: 0 0 0.45rem;
-      font-size: 1.1rem;
+      font-size: 1.08rem;
       line-height: 1.35;
     }
     .listing a { color: var(--accent2); text-decoration: none; }
     .listing a:hover { text-decoration: underline; }
     .row {
       color: var(--muted);
-      font-size: 0.95rem;
-      margin-bottom: 0.55rem;
+      font-size: 0.93rem;
+      margin-bottom: 0.5rem;
     }
-    .summary { margin: 0.4rem 0 0.7rem; line-height: 1.5; }
-    .badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.55rem; }
+    .summary { margin: 0.35rem 0 0.65rem; line-height: 1.5; }
+    .badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
     .badge {
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 700;
       border-radius: 999px;
-      padding: 0.2rem 0.55rem;
+      padding: 0.18rem 0.5rem;
       border: 1px solid transparent;
     }
     .b-source { background: rgba(56,189,248,0.12); color: #7dd3fc; border-color: rgba(56,189,248,0.25); }
     .b-private { background: rgba(74,222,128,0.12); color: #86efac; border-color: rgba(74,222,128,0.25); }
     .b-realtor { background: rgba(248,113,113,0.12); color: #fca5a5; border-color: rgba(248,113,113,0.25); }
     .b-type { background: rgba(45,212,191,0.12); color: #5eead4; border-color: rgba(45,212,191,0.25); }
+    .b-fav { background: rgba(251,191,36,0.14); color: #fcd34d; border-color: rgba(251,191,36,0.28); }
     .empty, .error {
       border: 1px dashed var(--line);
       border-radius: 14px;
-      padding: 1.5rem;
+      padding: 1.4rem;
       color: var(--muted);
       text-align: center;
     }
     footer {
-      margin-top: 2rem;
+      margin-top: 1.5rem;
       color: var(--muted);
       font-size: 0.85rem;
       text-align: center;
@@ -101,24 +176,205 @@
   <div class="wrap">
     <header>
       <h1>מאתר דירות — רמלה ולוד</h1>
-      <p>עמוד ציבורי שמתעדכן מהענן · עובד גם כשהמחשב כבוי</p>
+      <p>סינון חיפוש מלא · מתעדכן מהענן גם כשהמחשב כבוי</p>
     </header>
-    <div class="meta" id="meta"></div>
-    <div id="list"><div class="empty">טוען מודעות…</div></div>
-    <footer>מתעדכן אוטומטית כל שעה דרך GitHub Actions</footer>
+
+    <div class="layout">
+      <aside class="filters" id="filters">
+        <h2>פילטרים</h2>
+
+        <label class="check"><input type="checkbox" id="focusRegion" checked /> מיקוד רמלה + לוד בלבד</label>
+
+        <label class="field">
+          <span>עיר / מילת מפתח</span>
+          <input type="text" id="cityKeyword" placeholder="רמלה לוד / דירה ברמלה..." />
+        </label>
+        <p class="hint">אפשר לכתוב משפט חופשי. 0 = ללא הגבלה במחיר/חדרים/קומה.</p>
+
+        <h3>סוג נכס</h3>
+        <label class="check"><input type="checkbox" id="includeApartments" checked /> דירות</label>
+        <label class="check"><input type="checkbox" id="includeUnits" checked /> יחידות דיור</label>
+        <label class="check"><input type="checkbox" id="groundFloorOnly" /> קומת קרקע / דירת גן בלבד</label>
+
+        <h3>מחיר</h3>
+        <div class="grid2">
+          <label class="field"><span>מינ׳</span><input type="number" id="minPrice" min="0" step="100" value="0" /></label>
+          <label class="field"><span>מקס׳</span><input type="number" id="maxPrice" min="0" step="100" value="3500" /></label>
+        </div>
+
+        <h3>חדרים</h3>
+        <div class="grid2">
+          <label class="field"><span>מינ׳ (לדירות)</span><input type="number" id="minRooms" min="0" step="0.5" value="3" /></label>
+          <label class="field"><span>מקס׳</span><input type="number" id="maxRooms" min="0" step="0.5" value="0" /></label>
+        </div>
+        <p class="hint">יחידות דיור מוצגות גם עם פחות חדרים אם מסומן למעלה.</p>
+
+        <h3>קומה</h3>
+        <div class="grid2">
+          <label class="field"><span>מינ׳</span><input type="number" id="minFloor" min="0" step="1" value="0" /></label>
+          <label class="field"><span>מקס׳</span><input type="number" id="maxFloor" min="0" step="1" value="0" /></label>
+        </div>
+
+        <h3>נוסף</h3>
+        <label class="check"><input type="checkbox" id="privateOnly" /> ללא תיווך בלבד (פרטי)</label>
+        <label class="check"><input type="checkbox" id="favoritesOnly" /> מועדפים בלבד</label>
+
+        <div class="actions">
+          <button class="btn-primary" type="button" id="applyBtn">החל סינון</button>
+          <button class="btn-ghost" type="button" id="resetBtn">אפס לברירת מחדל</button>
+        </div>
+      </aside>
+
+      <main>
+        <div class="meta" id="meta"></div>
+        <div id="list"><div class="empty">טוען מודעות…</div></div>
+      </main>
+    </div>
+
+    <footer>הנתונים מתעדכנים אוטומטית כל שעה מהענן · הסינון רץ בדפדפן</footer>
   </div>
+
   <script>
+    const FOCUS_CITIES = ["רמלה", "לוד"];
+    let ALL = [];
+    let DEFAULTS = {};
+    let GENERATED_AT = "";
+
+    const $ = (id) => document.getElementById(id);
+    const num = (id) => {
+      const v = Number($(id).value);
+      return Number.isFinite(v) ? v : 0;
+    };
     const ils = (n) => (n == null || n === "") ? "—" : Number(n).toLocaleString("he-IL") + " ₪";
-    const rooms = (n) => (n == null || n === "") ? "—" : n;
-    const floor = (n) => (n == null || n === "") ? "—" : (n === 0 ? "קרקע" : n);
+    const roomsTxt = (n) => (n == null || n === "") ? "—" : n;
+    const floorTxt = (n) => (n == null || n === "") ? "—" : (Number(n) === 0 ? "קרקע" : n);
 
     function chip(label, value) {
       return `<span class="chip">${label}: <strong>${value}</strong></span>`;
     }
 
+    function readFilters() {
+      return {
+        focusRegion: $("focusRegion").checked,
+        cityKeyword: ($("cityKeyword").value || "").trim(),
+        includeApartments: $("includeApartments").checked,
+        includeUnits: $("includeUnits").checked,
+        groundFloorOnly: $("groundFloorOnly").checked,
+        minPrice: num("minPrice"),
+        maxPrice: num("maxPrice"),
+        minRooms: num("minRooms"),
+        maxRooms: num("maxRooms"),
+        minFloor: num("minFloor"),
+        maxFloor: num("maxFloor"),
+        privateOnly: $("privateOnly").checked,
+        favoritesOnly: $("favoritesOnly").checked,
+      };
+    }
+
+    function applyDefaults(d) {
+      DEFAULTS = d || {};
+      $("focusRegion").checked = DEFAULTS.focus_region !== false;
+      $("cityKeyword").value = DEFAULTS.city_keyword || "רמלה לוד";
+      $("includeApartments").checked = DEFAULTS.include_apartments !== false;
+      $("includeUnits").checked = DEFAULTS.include_units !== false;
+      $("groundFloorOnly").checked = !!DEFAULTS.ground_floor_only;
+      $("minPrice").value = DEFAULTS.min_price ?? 0;
+      $("maxPrice").value = DEFAULTS.max_price ?? 3500;
+      $("minRooms").value = DEFAULTS.min_rooms ?? 3;
+      $("maxRooms").value = DEFAULTS.max_rooms ?? 0;
+      $("minFloor").value = DEFAULTS.min_floor ?? 0;
+      $("maxFloor").value = DEFAULTS.max_floor ?? 0;
+      $("privateOnly").checked = !!DEFAULTS.private_only;
+      $("favoritesOnly").checked = !!DEFAULTS.favorites_only;
+    }
+
+    function tokensFromKeyword(keyword) {
+      return (keyword || "")
+        .split(/[\s,;/|]+/)
+        .map((t) => t.trim())
+        .filter((t) => t.length >= 2);
+    }
+
+    function isUnit(item) {
+      return !!item.is_unit;
+    }
+
+    function isApartmentLike(item) {
+      if (isUnit(item)) return false;
+      const t = item.property_type || "";
+      if (!t || t === "דירה" || t === "דירת גן") return true;
+      const blob = `${item.title || ""} ${item.description || ""}`;
+      return blob.includes("דירה") || true;
+    }
+
+    function matchesCity(item, f) {
+      const cities = f.focusRegion
+        ? FOCUS_CITIES
+        : tokensFromKeyword(f.cityKeyword).filter((t) =>
+            FOCUS_CITIES.includes(t) || /[\u0590-\u05FF]/.test(t)
+          );
+      const hay = `${item.city || ""} ${item.neighborhood || ""} ${item.title || ""} ${item.description || ""} ${item.summary || ""}`;
+      if (f.focusRegion || cities.length) {
+        const list = cities.length ? cities : FOCUS_CITIES;
+        return list.some((c) => hay.includes(c));
+      }
+      if (!f.cityKeyword) return true;
+      return tokensFromKeyword(f.cityKeyword).every((t) => hay.includes(t));
+    }
+
+    function filterListings(f) {
+      if (!f.includeApartments && !f.includeUnits) return [];
+
+      return ALL.filter((item) => {
+        if (f.favoritesOnly && !item.is_favorite) return false;
+        if (f.privateOnly && item.is_realtor) return false;
+        if (!matchesCity(item, f)) return false;
+
+        const unit = isUnit(item);
+        const apt = isApartmentLike(item);
+        if (unit && !f.includeUnits) return false;
+        if (!unit && apt && !f.includeApartments) return false;
+        if (!unit && !apt && !f.includeApartments) return false;
+
+        if (f.groundFloorOnly) {
+          const ground =
+            item.floor === 0 ||
+            item.is_garden ||
+            (item.title || "").includes("קרקע") ||
+            (item.description || "").includes("קרקע") ||
+            (item.title || "").includes("דירת גן") ||
+            (item.description || "").includes("דירת גן");
+          if (!ground) return false;
+        }
+
+        if (f.minPrice > 0 && item.price != null && item.price < f.minPrice) return false;
+        if (f.maxPrice > 0 && item.price != null && item.price > f.maxPrice) return false;
+
+        // Rooms: apartments must meet min; units are flexible when includeUnits.
+        if (item.rooms != null) {
+          if (f.maxRooms > 0 && item.rooms > f.maxRooms) return false;
+          if (f.minRooms > 0) {
+            if (unit && f.includeUnits) {
+              // flexible for units
+            } else if (item.rooms < f.minRooms) {
+              return false;
+            }
+          }
+        }
+
+        if (item.floor != null) {
+          if (f.minFloor > 0 && item.floor < f.minFloor) return false;
+          if (f.maxFloor > 0 && item.floor > f.maxFloor) return false;
+        }
+
+        return true;
+      });
+    }
+
     function card(item) {
       const loc = [item.city, item.neighborhood].filter(Boolean).join(" · ");
       const badges = [
+        item.is_favorite ? `<span class="badge b-fav">★ מועדף</span>` : "",
         item.source ? `<span class="badge b-source">${item.source}</span>` : "",
         item.property_type ? `<span class="badge b-type">${item.property_type}</span>` : "",
         item.is_realtor
@@ -132,36 +388,64 @@
         <article class="listing">
           <div class="badges">${badges}</div>
           <h2>${item.title || "ללא כותרת"}</h2>
-          <div class="row">${loc || "מיקום לא צוין"} · ${ils(item.price)} · ${rooms(item.rooms)} חדרים · קומה ${floor(item.floor)}</div>
+          <div class="row">${loc || "מיקום לא צוין"} · ${ils(item.price)} · ${roomsTxt(item.rooms)} חדרים · קומה ${floorTxt(item.floor)}</div>
           ${item.summary ? `<p class="summary">${item.summary}</p>` : ""}
           ${href}
         </article>`;
     }
 
+    function render() {
+      const f = readFilters();
+      const items = filterListings(f);
+      const when = GENERATED_AT
+        ? new Date(GENERATED_AT).toLocaleString("he-IL")
+        : "לא ידוע";
+      $("meta").innerHTML = [
+        chip("מוצגות", items.length),
+        chip("במסד", ALL.length),
+        chip("עודכן", when),
+      ].join("");
+      $("list").innerHTML = items.length
+        ? items.map(card).join("")
+        : `<div class="empty">אין מודעות לפי הסינון הנוכחי. נסו להרחיב מחיר/חדרים או לכבות מיקוד.</div>`;
+    }
+
     async function load() {
-      const list = document.getElementById("list");
-      const meta = document.getElementById("meta");
       try {
         const res = await fetch(`data.json?t=${Date.now()}`);
         if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
-        const when = data.generated_at
-          ? new Date(data.generated_at).toLocaleString("he-IL")
-          : "לא ידוע";
-        meta.innerHTML = [
-          chip("מודעות תואמות", data.count ?? 0),
-          chip("סה״כ במסד", data.db_total ?? "—"),
-          chip("עודכן", when),
-          chip("ערים", (data.cities || []).join(" · ") || "—"),
-        ].join("");
-        const items = data.listings || [];
-        list.innerHTML = items.length
-          ? items.map(card).join("")
-          : `<div class="empty">אין מודעות תואמות כרגע. הסריקה הבאה בענן תעדכן אוטומטית.</div>`;
+        ALL = data.listings || [];
+        GENERATED_AT = data.generated_at || "";
+        applyDefaults(data.defaults || {});
+        render();
       } catch (err) {
-        list.innerHTML = `<div class="error">לא הצלחתי לטעון נתונים (${err.message}). נסו לרענן בעוד דקה.</div>`;
+        $("list").innerHTML = `<div class="error">לא הצלחתי לטעון נתונים (${err.message}).</div>`;
       }
     }
+
+    $("applyBtn").addEventListener("click", render);
+    $("resetBtn").addEventListener("click", () => {
+      applyDefaults(DEFAULTS);
+      render();
+    });
+    [
+      "focusRegion", "cityKeyword", "includeApartments", "includeUnits", "groundFloorOnly",
+      "minPrice", "maxPrice", "minRooms", "maxRooms", "minFloor", "maxFloor",
+      "privateOnly", "favoritesOnly"
+    ].forEach((id) => {
+      $(id).addEventListener("change", render);
+      $(id).addEventListener("input", () => {
+        if (id === "cityKeyword") render();
+      });
+    });
+    $("focusRegion").addEventListener("change", () => {
+      if ($("focusRegion").checked && !$("cityKeyword").value.trim()) {
+        $("cityKeyword").value = "רמלה לוד";
+      }
+      render();
+    });
+
     load();
   </script>
 </body>

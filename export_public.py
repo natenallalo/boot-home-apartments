@@ -1,4 +1,4 @@
-"""Export filtered listings for the public GitHub Pages viewer."""
+"""Export all listings for the public GitHub Pages viewer (client-side filters)."""
 
 from __future__ import annotations
 
@@ -15,20 +15,42 @@ DATA_PATH = DOCS / "data.json"
 
 
 def _public_row(row: dict) -> dict:
+    title = row.get("title") or ""
+    description = row.get("description") or ""
+    property_type = row.get("property_type") or ""
+    blob = f"{title} {description} {property_type}".lower()
+    is_unit = (
+        property_type == "יחידת דיור"
+        or "יחיד" in title
+        or "יחיד" in description
+        or "יחידת דיור" in title
+        or "יחידת דיור" in description
+    )
+    is_garden = (
+        property_type == "דירת גן"
+        or "דירת גן" in title
+        or "דירת גן" in description
+        or "קרקע" in title
+        or "קרקע" in description
+    )
     return {
         "id": row.get("id"),
-        "title": row.get("title") or "ללא כותרת",
+        "title": title or "ללא כותרת",
+        "description": description,
         "city": row.get("city") or "",
         "neighborhood": row.get("neighborhood") or "",
         "price": row.get("price"),
         "rooms": row.get("rooms"),
         "floor": row.get("floor"),
-        "property_type": row.get("property_type") or "",
+        "property_type": property_type,
         "source": row.get("source") or "",
         "url": row.get("url") or "",
         "summary": row.get("summary") or "",
         "is_realtor": bool(row.get("is_realtor")),
         "is_favorite": bool(row.get("is_favorite")),
+        "is_unit": bool(is_unit),
+        "is_garden": bool(is_garden),
+        "search_blob": blob,
         "updated_at": row.get("updated_at") or row.get("created_at") or "",
     }
 
@@ -36,34 +58,34 @@ def _public_row(row: dict) -> dict:
 def export_public_data() -> dict:
     settings = load_settings()
     cities = settings.get("cities") or ["רמלה", "לוד"]
-    min_rooms = settings.get("min_rooms") or 0
-    max_price = settings.get("max_price") or 0
 
-    matches = db.search_apartments(
-        city_keyword=" ".join(cities),
-        min_price=settings.get("min_price") or None,
-        max_price=max_price if max_price else None,
-        min_rooms=min_rooms if min_rooms else None,
-        max_rooms=settings.get("max_rooms") or None,
-        include_apartments=bool(settings.get("include_apartments", True)),
-        include_units=bool(settings.get("include_units", True)),
-        ground_floor_only=bool(settings.get("ground_floor_only", False)),
-        rooms_flexible_for_units=True,
-        private_only=bool(settings.get("private_only", False)),
-    )
+    # Export the full catalog (non-hidden) so the public page can filter live.
+    all_rows = db.search_apartments(include_hidden=False)
+    listings = [_public_row(dict(r)) for r in all_rows]
+
+    defaults = {
+        "city_keyword": settings.get("city_keyword") or " ".join(cities),
+        "focus_region": bool(settings.get("focus_region", True)),
+        "include_apartments": bool(settings.get("include_apartments", True)),
+        "include_units": bool(settings.get("include_units", True)),
+        "ground_floor_only": bool(settings.get("ground_floor_only", False)),
+        "min_price": int(settings.get("min_price") or 0),
+        "max_price": int(settings.get("max_price") or 3500),
+        "min_rooms": float(settings.get("min_rooms") or 3),
+        "max_rooms": float(settings.get("max_rooms") or 0),
+        "min_floor": int(settings.get("min_floor") or 0),
+        "max_floor": int(settings.get("max_floor") or 0),
+        "private_only": bool(settings.get("private_only", False)),
+        "favorites_only": False,
+    }
 
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "cities": cities,
-        "filters": {
-            "max_price": max_price or None,
-            "min_rooms": min_rooms or None,
-            "include_units": bool(settings.get("include_units", True)),
-            "ground_floor_only": bool(settings.get("ground_floor_only", False)),
-        },
-        "count": len(matches),
+        "defaults": defaults,
+        "count": len(listings),
         "db_total": db.count_apartments(),
-        "listings": [_public_row(dict(r)) for r in matches],
+        "listings": listings,
     }
 
     DOCS.mkdir(parents=True, exist_ok=True)
