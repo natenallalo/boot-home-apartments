@@ -20,7 +20,7 @@ import ai_filter
 import database as db
 from export_public import export_public_data
 from match_filter import filter_matches
-from notify import notify_new_matches, send_telegram_message, telegram_configured
+from notify import notify_new_listings, send_telegram_message, telegram_configured
 from scraper import FOCUS_REGION_CITIES, fetch_listings
 from settings_store import load_settings, save_settings
 
@@ -83,13 +83,16 @@ def run_once() -> dict:
     )
 
     new_matches = filter_matches(new_rows, settings)
-    notify_result: dict = {"sent": 0}
-    if new_matches:
-        _log(f"New filter matches: {len(new_matches)} — sending Telegram alerts")
-        notify_result = notify_new_matches(new_matches, settings=settings)
+    notify_result: dict = {"sent": 0, "matched": 0, "other": 0}
+    if new_rows and settings.get("notify_enabled", True):
+        _log(
+            f"New listings: {len(new_rows)} "
+            f"(match={len(new_matches)}, other={len(new_rows) - len(new_matches)})"
+        )
+        notify_result = notify_new_listings(new_rows, settings=settings)
         _log(f"Telegram notify: {notify_result}")
-    elif inserted and telegram_configured(settings) and settings.get("notify_enabled", True):
-        _log(f"Inserted {inserted} listings but none matched saved filters")
+    elif inserted and telegram_configured(settings):
+        _log(f"Inserted {inserted} but notifications disabled/not configured")
 
     elapsed = round(time.time() - started, 1)
     status = {
@@ -100,6 +103,7 @@ def run_once() -> dict:
         "found": len(enriched),
         "inserted": inserted,
         "new_matches": len(new_matches),
+        "new_other": max(0, len(new_rows) - len(new_matches)),
         "alerts_sent": notify_result.get("sent", 0),
         "matching_filters": len(matches),
         "sources": (meta or {}).get("sources", {}),

@@ -15,7 +15,7 @@ import database as db
 from scraper import FOCUS_REGION_CITIES, fetch_listings
 from search_utils import extract_city, extract_cities, parse_search_query
 from match_filter import filter_matches
-from notify import notify_new_matches, send_telegram_message, telegram_configured
+from notify import notify_new_listings, send_telegram_message, telegram_configured
 from settings_store import load_settings, save_settings
 
 ENV_PATH = Path(__file__).resolve().parent / ".env"
@@ -275,16 +275,21 @@ def run_scan(
     )
     use_openai = bool(_clean_env_value(os.getenv("OPENAI_API_KEY", "")))
     enriched = ai_filter.enrich_listings(listings, use_openai=use_openai)
-    inserted, new_rows = db.upsert_many(enriched)
+    upsert_result = db.upsert_many(enriched)
+    if isinstance(upsert_result, tuple):
+        inserted, new_rows = upsert_result
+    else:
+        inserted, new_rows = int(upsert_result or 0), []
     settings_now = load_settings()
     new_matches = filter_matches(new_rows, settings_now)
-    alerts = {"sent": 0}
-    if new_matches:
-        alerts = notify_new_matches(new_matches, settings=settings_now)
+    alerts = {"sent": 0, "matched": 0, "other": 0}
+    if new_rows and settings_now.get("notify_enabled", True):
+        alerts = notify_new_listings(new_rows, settings=settings_now)
     meta = dict(meta or {})
     meta["trigger"] = trigger
     meta["scan_cities"] = target_cities
     meta["new_matches"] = len(new_matches)
+    meta["new_other"] = max(0, len(new_rows) - len(new_matches))
     meta["alerts_sent"] = alerts.get("sent", 0)
     st.session_state["last_fetch_mode"] = mode
     st.session_state["last_inserted"] = inserted
@@ -448,8 +453,13 @@ with st.sidebar:
         "שמירת ההגדרות כאן מעדכנת את settings.json שהענן קורא ממנו כל ~30 דקות."
     )
     notify_enabled = st.toggle(
-        "שלח התראת Telegram על דירה חדשה לפי הסינון",
+        "שלח התראות Telegram על מודעות חדשות",
         value=bool(SAVED.get("notify_enabled", True)),
+    )
+    notify_non_matching = st.toggle(
+        "כולל גם מודעות שלא תואמות לסינון (מסומן ❌)",
+        value=bool(SAVED.get("notify_non_matching", True)),
+        help="תואמות מסומנות ✅, לא תואמות מסומנות ❌",
     )
     if st.button("💾 שמור הגדרות לענן", use_container_width=True, type="primary"):
         save_settings(
@@ -474,6 +484,7 @@ with st.sidebar:
                 "interval_minutes": int(auto_interval_min),
                 "enabled": True,
                 "notify_enabled": notify_enabled,
+                "notify_non_matching": notify_non_matching,
                 "telegram_chat_id": _clean_env_value(
                     os.getenv("TELEGRAM_CHAT_ID", "")
                 )

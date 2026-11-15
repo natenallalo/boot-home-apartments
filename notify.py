@@ -1,4 +1,4 @@
-"""Telegram notifications for new matching apartment listings."""
+"""Telegram notifications for new apartment listings."""
 
 from __future__ import annotations
 
@@ -8,6 +8,8 @@ from typing import Any, Optional
 
 import requests
 from dotenv import load_dotenv
+
+from match_filter import listing_matches_settings
 
 load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
 
@@ -52,7 +54,11 @@ def telegram_configured(settings: Optional[dict[str, Any]] = None) -> bool:
     return bool(token and chat_id)
 
 
-def format_listing_message(item: dict[str, Any]) -> str:
+def format_listing_message(
+    item: dict[str, Any],
+    *,
+    matches_filter: bool = True,
+) -> str:
     title = item.get("title") or "מודעה חדשה"
     city = item.get("city") or ""
     neighborhood = item.get("neighborhood") or ""
@@ -73,8 +79,13 @@ def format_listing_message(item: dict[str, Any]) -> str:
     else:
         floor_txt = f"קומה {floor}"
 
+    if matches_filter:
+        header = "✅ תואם לסינון שלך"
+    else:
+        header = "❌ לא תואם לסינון (מודעה חדשה בכל זאת)"
+
     lines = [
-        "🏠 דירה חדשה לפי הסינון שלך",
+        header,
         "",
         title,
         loc or "מיקום לא צוין",
@@ -131,31 +142,105 @@ def notify_new_matches(
     settings: Optional[dict[str, Any]] = None,
     max_messages: int = 15,
 ) -> dict[str, Any]:
-    """Send one Telegram message per new matching listing."""
+    """Backward-compatible: notify only listings already known to match."""
+    return notify_new_listings(
+        listings,
+        settings=settings,
+        max_match_messages=max_messages,
+        max_other_messages=0,
+        assume_all_match=True,
+    )
+
+
+def notify_new_listings(
+    listings: list[dict[str, Any]],
+    *,
+    settings: Optional[dict[str, Any]] = None,
+    max_match_messages: int = 12,
+    max_other_messages: int = 12,
+    assume_all_match: bool = False,
+) -> dict[str, Any]:
+    """
+    Send Telegram alerts for new listings.
+    Matching filter → category "✅ תואם לסינון"
+    Non-matching → category "❌ לא תואם לסינון"
+    """
     settings = settings or {}
     if not settings.get("notify_enabled", True):
         return {"sent": 0, "skipped": True, "reason": "disabled"}
     if not listings:
-        return {"sent": 0, "skipped": False}
+        return {"sent": 0, "skipped": False, "matched": 0, "other": 0}
     if not telegram_configured(settings):
         return {"sent": 0, "skipped": True, "reason": "not_configured"}
 
+    notify_other = bool(settings.get("notify_non_matching", True))
+
+    matched: list[dict[str, Any]] = []
+    other: list[dict[str, Any]] = []
+    if assume_all_match:
+        matched = list(listings)
+    else:
+        for item in listings:
+            if listing_matches_settings(item, settings):
+                matched.append(item)
+            else:
+                other.append(item)
+
     sent = 0
     errors: list[str] = []
-    for item in listings[:max_messages]:
-        ok, detail = send_telegram_message(
-            format_listing_message(item),
-            settings=settings,
-        )
-        if ok:
-            sent += 1
-        else:
-            errors.append(detail)
 
-    if len(listings) > max_messages:
+    def _send_batch(
+        items: list[dict[str, Any]],
+        *,
+        matches_filter: bool,
+        limit: int,
+        overflow_label: str,
+    ) -> None:
+        nonlocal sent
+        if limit <= 0 or not items:
+            return
+        for item in items[:limit]:
+            ok, detail = send_telegram_message(
+                format_listing_message(item, matches_filter=matches_filter),
+                settings=settings,
+            )
+            if ok:
+                sent += 1
+            else:
+                errors.append(detail)
+        leftover = len(items) - limit
+        if leftover > 0:
+            send_telegram_message(
+                f"{overflow_label}: עוד {leftover} מודעות שלא נשלחו בפירוט.",
+                settings=settings,
+            )
+
+    if matched or (notify_other and other):
         send_telegram_message(
-            f"➕ ועוד {len(listings) - max_messages} מודעות חדשות תואמות בסינון.",
+            "📬 סריקה חדשה\n"
+            f"✅ תואם לסינון: {len(matched)}\n"
+            f"❌ לא תואם לסינון: {len(other)}",
             settings=settings,
         )
 
-    return {"sent": sent, "errors": errors, "total_candidates": len(listings)}
+    _send_batch(
+        matched,
+        matches_filter=True,
+        limit=max_match_messages,
+        overflow_label="✅ תואם לסינון",
+    )
+    if notify_other:
+        _send_batch(
+            other,
+            matches_filter=False,
+            limit=max_other_messages,
+            overflow_label="❌ לא תואם לסינון",
+        )
+
+    return {
+        "sent": sent,
+        "errors": errors,
+        "matched": len(matched),
+        "other": len(other),
+        "total_candidates": len(listings),
+    }

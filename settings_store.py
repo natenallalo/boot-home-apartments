@@ -29,6 +29,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "interval_minutes": 30,
     "enabled": True,
     "notify_enabled": True,
+    "notify_non_matching": True,
     "telegram_chat_id": "",
 }
 
