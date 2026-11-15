@@ -1,0 +1,14 @@
+# Optional always-on worker on Render (free/paid).
+# Connect this repo at https://dashboard.render.com and deploy the worker service.
+services:
+  - type: worker
+    name: apartment-scanner
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python worker.py --loop
+    envVars:
+      - key: APIFY_API_TOKEN
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
