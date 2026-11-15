@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 
 import ai_filter
 import database as db
+from export_public import export_public_data
 from scraper import FOCUS_REGION_CITIES, fetch_listings
 from settings_store import load_settings, save_settings
 
@@ -94,6 +95,12 @@ def run_once() -> dict:
         "db_total": db.count_apartments(),
     }
     STATUS_PATH.write_text(json.dumps(status, ensure_ascii=False, indent=2), encoding="utf-8")
+    try:
+        public = export_public_data()
+        status["public_export"] = public.get("count", 0)
+        _log(f"Public viewer export: {public.get('count', 0)} listings")
+    except Exception as exc:
+        _log(f"Public export failed: {type(exc).__name__}: {exc}")
     _log(
         f"Done mode={mode} found={len(enriched)} inserted={inserted} "
         f"matches={len(matches)} elapsed={elapsed}s sources={status['sources']}"

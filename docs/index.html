@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>מאתר דירות — רמלה ולוד</title>
+  <style>
+    :root {
+      --bg0: #0b1220;
+      --bg1: #121a2b;
+      --card: #182338;
+      --line: #2a3a55;
+      --text: #e8eef9;
+      --muted: #94a3b8;
+      --accent: #2dd4bf;
+      --accent2: #38bdf8;
+      --warn: #fbbf24;
+      --ok: #4ade80;
+      --bad: #f87171;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 100% -10%, rgba(45, 212, 191, 0.18), transparent 55%),
+        radial-gradient(900px 500px at -10% 20%, rgba(56, 189, 248, 0.14), transparent 50%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      min-height: 100vh;
+    }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+    header h1 {
+      margin: 0 0 0.35rem;
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      letter-spacing: -0.02em;
+    }
+    header p { margin: 0; color: var(--muted); }
+    .meta {
+      display: flex; flex-wrap: wrap; gap: 0.6rem;
+      margin: 1.25rem 0 1.5rem;
+    }
+    .chip {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .chip strong { color: var(--accent); font-weight: 700; }
+    .listing {
+      background: color-mix(in srgb, var(--card) 92%, black);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 1rem 1.1rem;
+      margin-bottom: 0.9rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+    }
+    .listing h2 {
+      margin: 0 0 0.45rem;
+      font-size: 1.1rem;
+      line-height: 1.35;
+    }
+    .listing a { color: var(--accent2); text-decoration: none; }
+    .listing a:hover { text-decoration: underline; }
+    .row {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 0.55rem;
+    }
+    .summary { margin: 0.4rem 0 0.7rem; line-height: 1.5; }
+    .badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.55rem; }
+    .badge {
+      font-size: 0.78rem;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 0.2rem 0.55rem;
+      border: 1px solid transparent;
+    }
+    .b-source { background: rgba(56,189,248,0.12); color: #7dd3fc; border-color: rgba(56,189,248,0.25); }
+    .b-private { background: rgba(74,222,128,0.12); color: #86efac; border-color: rgba(74,222,128,0.25); }
+    .b-realtor { background: rgba(248,113,113,0.12); color: #fca5a5; border-color: rgba(248,113,113,0.25); }
+    .b-type { background: rgba(45,212,191,0.12); color: #5eead4; border-color: rgba(45,212,191,0.25); }
+    .empty, .error {
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+      padding: 1.5rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    footer {
+      margin-top: 2rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>מאתר דירות — רמלה ולוד</h1>
+      <p>עמוד ציבורי שמתעדכן מהענן · עובד גם כשהמחשב כבוי</p>
+    </header>
+    <div class="meta" id="meta"></div>
+    <div id="list"><div class="empty">טוען מודעות…</div></div>
+    <footer>מתעדכן אוטומטית כל שעה דרך GitHub Actions</footer>
+  </div>
+  <script>
+    const ils = (n) => (n == null || n === "") ? "—" : Number(n).toLocaleString("he-IL") + " ₪";
+    const rooms = (n) => (n == null || n === "") ? "—" : n;
+    const floor = (n) => (n == null || n === "") ? "—" : (n === 0 ? "קרקע" : n);
+
+    function chip(label, value) {
+      return `<span class="chip">${label}: <strong>${value}</strong></span>`;
+    }
+
+    function card(item) {
+      const loc = [item.city, item.neighborhood].filter(Boolean).join(" · ");
+      const badges = [
+        item.source ? `<span class="badge b-source">${item.source}</span>` : "",
+        item.property_type ? `<span class="badge b-type">${item.property_type}</span>` : "",
+        item.is_realtor
+          ? `<span class="badge b-realtor">תיווך</span>`
+          : `<span class="badge b-private">פרטי</span>`,
+      ].join("");
+      const href = item.url
+        ? `<a href="${item.url}" target="_blank" rel="noopener">למודעה המקורית ←</a>`
+        : "";
+      return `
+        <article class="listing">
+          <div class="badges">${badges}</div>
+          <h2>${item.title || "ללא כותרת"}</h2>
+          <div class="row">${loc || "מיקום לא צוין"} · ${ils(item.price)} · ${rooms(item.rooms)} חדרים · קומה ${floor(item.floor)}</div>
+          ${item.summary ? `<p class="summary">${item.summary}</p>` : ""}
+          ${href}
+        </article>`;
+    }
+
+    async function load() {
+      const list = document.getElementById("list");
+      const meta = document.getElementById("meta");
+      try {
+        const res = await fetch(`data.json?t=${Date.now()}`);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        const when = data.generated_at
+          ? new Date(data.generated_at).toLocaleString("he-IL")
+          : "לא ידוע";
+        meta.innerHTML = [
+          chip("מודעות תואמות", data.count ?? 0),
+          chip("סה״כ במסד", data.db_total ?? "—"),
+          chip("עודכן", when),
+          chip("ערים", (data.cities || []).join(" · ") || "—"),
+        ].join("");
+        const items = data.listings || [];
+        list.innerHTML = items.length
+          ? items.map(card).join("")
+          : `<div class="empty">אין מודעות תואמות כרגע. הסריקה הבאה בענן תעדכן אוטומטית.</div>`;
+      } catch (err) {
+        list.innerHTML = `<div class="error">לא הצלחתי לטעון נתונים (${err.message}). נסו לרענן בעוד דקה.</div>`;
+      }
+    }
+    load();
+  </script>
+</body>
+</html>

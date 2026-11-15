@@ -1,6 +1,16 @@
-# Optional always-on worker on Render (free/paid).
-# Connect this repo at https://dashboard.render.com and deploy the worker service.
+# Deploy at https://dashboard.render.com — web UI stays online when your PC is off.
 services:
+  - type: web
+    name: apartment-finder
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run app.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true
+    envVars:
+      - key: APIFY_API_TOKEN
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
   - type: worker
     name: apartment-scanner
     runtime: python
