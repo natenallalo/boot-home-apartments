@@ -308,24 +308,31 @@
     }
 
     function matchesCity(item, f) {
-      const cities = f.focusRegion
-        ? FOCUS_CITIES
-        : tokensFromKeyword(f.cityKeyword).filter((t) =>
-            FOCUS_CITIES.includes(t) || /[\u0590-\u05FF]/.test(t)
-          );
+      const cityField = (item.city || "").trim();
       const hay = `${item.city || ""} ${item.neighborhood || ""} ${item.title || ""} ${item.description || ""} ${item.summary || ""}`;
-      if (f.focusRegion || cities.length) {
-        const list = cities.length ? cities : FOCUS_CITIES;
-        return list.some((c) => hay.includes(c));
+      const inFocus = (text) => FOCUS_CITIES.some((c) => (text || "").includes(c));
+
+      if (f.focusRegion) {
+        // If city is known and not Ramla/Lod — exclude (e.g. תל אביב).
+        if (cityField && !inFocus(cityField)) return false;
+        return inFocus(cityField) || inFocus(hay);
       }
-      if (!f.cityKeyword) return true;
-      return tokensFromKeyword(f.cityKeyword).every((t) => hay.includes(t));
+
+      const tokens = tokensFromKeyword(f.cityKeyword);
+      if (!tokens.length) return true;
+      return tokens.every((t) => hay.includes(t));
+    }
+
+    function isSaleAd(item) {
+      const blob = `${item.title || ""} ${item.description || ""}`;
+      return blob.includes("למכירה") && !blob.includes("להשכרה");
     }
 
     function filterListings(f) {
       if (!f.includeApartments && !f.includeUnits) return [];
 
       return ALL.filter((item) => {
+        if (isSaleAd(item)) return false;
         if (f.favoritesOnly && !item.is_favorite) return false;
         if (f.privateOnly && item.is_realtor) return false;
         if (!matchesCity(item, f)) return false;
