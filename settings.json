@@ -1,0 +1,21 @@
+{
+  "focus_region": true,
+  "cities": ["רמלה", "לוד"],
+  "city_keyword": "רמלה לוד",
+  "use_web": true,
+  "use_social": true,
+  "use_yad2": false,
+  "mock_mode": false,
+  "include_apartments": true,
+  "include_units": true,
+  "ground_floor_only": false,
+  "min_price": 0,
+  "max_price": 3500,
+  "min_rooms": 3.0,
+  "max_rooms": 0,
+  "min_floor": 0,
+  "max_floor": 0,
+  "private_only": false,
+  "interval_minutes": 60,
+  "enabled": true
+}

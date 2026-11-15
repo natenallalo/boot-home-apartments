@@ -1,0 +1,17 @@
+venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+_*.py
+_*.txt
+_*.html
+_*.json
+_*.xml
+!settings.json
+!scan_status.json
+.DS_Store
+Thumbs.db
+agent-tools/

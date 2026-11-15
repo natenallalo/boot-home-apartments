@@ -1,0 +1,6 @@
+streamlit
+openai
+apify-client
+python-dotenv
+pydantic
+requests

@@ -1,0 +1,52 @@
+name: Cloud Apartment Scan
+
+on:
+  schedule:
+    # Every hour — continues while your PC is off
+    - cron: "0 * * * *"
+  workflow_dispatch:
+  push:
+    paths:
+      - "settings.json"
+      - "worker.py"
+      - "scraper.py"
+      - "settings_store.py"
+      - ".github/workflows/cloud-scan.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run cloud scanner
+        env:
+          APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python worker.py
+
+      - name: Commit updated database
+        run: |
+          git config user.name "apartment-bot"
+          git config user.email "apartment-bot@users.noreply.github.com"
+          git add apartments.db scan_status.json settings.json || true
+          if git diff --staged --quiet; then
+            echo "No DB changes to commit"
+          else
+            git commit -m "chore: cloud scan update $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push
+          fi
