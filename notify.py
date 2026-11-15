@@ -3,24 +3,46 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import Any, Optional
 
 import requests
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
 
 
 def _clean(value: Optional[str]) -> str:
     return (value or "").strip().strip('"').strip("'")
 
 
+def _read_dotenv_fallback(key: str) -> str:
+    """Read a key from .env even if the process env was not refreshed."""
+    env_path = Path(__file__).resolve().parent / ".env"
+    if not env_path.exists():
+        return ""
+    try:
+        from dotenv import dotenv_values
+
+        values = dotenv_values(env_path)
+        return _clean(values.get(key))
+    except Exception:
+        return ""
+
+
 def get_telegram_config(
     settings: Optional[dict[str, Any]] = None,
 ) -> tuple[str, str]:
     settings = settings or {}
-    token = _clean(os.getenv("TELEGRAM_BOT_TOKEN")) or _clean(
-        str(settings.get("telegram_bot_token") or "")
+    token = (
+        _clean(os.getenv("TELEGRAM_BOT_TOKEN"))
+        or _clean(str(settings.get("telegram_bot_token") or ""))
+        or _read_dotenv_fallback("TELEGRAM_BOT_TOKEN")
     )
-    chat_id = _clean(os.getenv("TELEGRAM_CHAT_ID")) or _clean(
-        str(settings.get("telegram_chat_id") or "")
+    chat_id = (
+        _clean(os.getenv("TELEGRAM_CHAT_ID"))
+        or _clean(str(settings.get("telegram_chat_id") or ""))
+        or _read_dotenv_fallback("TELEGRAM_CHAT_ID")
     )
     return token, chat_id
 
