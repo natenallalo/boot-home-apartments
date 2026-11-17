@@ -1,9 +1,9 @@
 {
   "ok": true,
-  "finished_at": "2026-11-17T05:12:27.475145+00:00",
+  "finished_at": "2026-11-17T14:47:49.263339+00:00",
   "mode": "live",
-  "elapsed_sec": 41.2,
-  "found": 28,
+  "elapsed_sec": 35.0,
+  "found": 25,
   "inserted": 0,
   "new_matches": 0,
   "new_other": 0,
@@ -13,10 +13,10 @@
     "רמלה": 11,
     "רמלה-Homeless": 1,
     "רמלה-Ad": 10,
-    "לוד": 17,
+    "לוד": 14,
     "לוד-Homeless": 3,
-    "לוד-Ad": 14,
-    "enriched_details": 28,
+    "לוד-Ad": 11,
+    "enriched_details": 25,
     "Facebook Marketplace": 0
   },
   "notes": [
