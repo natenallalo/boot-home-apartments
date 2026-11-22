@@ -1,22 +1,22 @@
 {
   "ok": true,
-  "finished_at": "2026-11-22T09:30:15.730551+00:00",
+  "finished_at": "2026-11-22T17:21:11.110869+00:00",
   "mode": "live",
-  "elapsed_sec": 89.1,
-  "found": 19,
+  "elapsed_sec": 49.6,
+  "found": 25,
   "inserted": 0,
   "new_matches": 0,
   "new_other": 0,
   "alerts_sent": 0,
   "matching_filters": 19,
   "sources": {
-    "רמלה": 5,
+    "רמלה": 11,
     "רמלה-Homeless": 1,
-    "רמלה-Ad": 4,
+    "רמלה-Ad": 10,
     "לוד": 14,
     "לוד-Homeless": 3,
     "לוד-Ad": 11,
-    "enriched_details": 19,
+    "enriched_details": 25,
     "Facebook Marketplace": 0
   },
   "notes": [
